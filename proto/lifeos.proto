@@ -556,6 +556,10 @@ message HealthResponse {
   string ci_run_number = 4;
   string ci_run_id = 5;
   string ci_run_url = 6;
+  // From build-info.json (written by scripts/deploy.sh from git).
+  string version = 7;       // short git revision, e.g. "9f0faa7"
+  string git_commit = 8;  // full commit SHA
+  string build_time = 9;  // ISO 8601 UTC from deploy, e.g. "2026-03-29T20:00:00Z"
 }
 
 service HealthService {
