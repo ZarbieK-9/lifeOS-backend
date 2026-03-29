@@ -1,0 +1,58 @@
+# GitHub-hosted: test on PR + push; deploy over SSH only on push to main.
+# Repo secrets: DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY (private key for SSH user).
+# Server: git clone at /home/zarbie/lifeos-backend (override with DEPLOY_REMOTE_PATH below).
+
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: lifeos-backend-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest tests/ -q
+
+  deploy:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_REMOTE_PATH: ${{ secrets.DEPLOY_REMOTE_PATH }}
+        run: |
+          set -euo pipefail
+          test -n "${DEPLOY_HOST:-}" && test -n "${DEPLOY_USER:-}" && test -n "${DEPLOY_SSH_KEY:-}" || {
+            echo "Add repository secrets: DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY"
+            exit 1
+          }
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/lifeos_deploy
+          chmod 600 ~/.ssh/lifeos_deploy
+          REMOTE_PATH="${DEPLOY_REMOTE_PATH:-/home/zarbie/lifeos-backend}"
+          ssh -i ~/.ssh/lifeos_deploy \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=accept-new \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "set -euo pipefail; cd '${REMOTE_PATH}' && git fetch origin main && git reset --hard origin/main && chmod +x scripts/deploy.sh && exec bash scripts/deploy.sh"
