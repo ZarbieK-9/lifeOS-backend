@@ -1,7 +1,6 @@
-# Backend-only repo: SSH to server, pull this repo, run scripts/deploy.sh
-#
-# Secrets: DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY
-# Server: clone at e.g. /home/zarbie/lifeos-backend (set LIFEOS_BACKEND_ROOT on host or edit cd path below)
+# Self-hosted runner on the production host (same pattern as pocketbridge-backend).
+# Requires: clone this repo on the runner machine and point LIFEOS_BACKEND_ROOT there.
+# Runner user must be able to run `sudo systemctl restart pm2-zarbie.service` (deploy.sh).
 
 name: Deploy
 
@@ -9,35 +8,21 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: deploy-lifeos-backend
+  cancel-in-progress: false
+
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    env:
+      LIFEOS_BACKEND_ROOT: /home/zarbie/lifeos-backend
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy over SSH
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      - name: Pull and deploy
         run: |
           set -euo pipefail
-          test -n "${DEPLOY_HOST:-}" && test -n "${DEPLOY_USER:-}" && test -n "${DEPLOY_SSH_KEY:-}" || {
-            echo "Missing DEPLOY_HOST, DEPLOY_USER, or DEPLOY_SSH_KEY repository secrets."
-            exit 1
-          }
-          mkdir -p ~/.ssh
-          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/lifeos_deploy
-          chmod 600 ~/.ssh/lifeos_deploy
-          ssh -i ~/.ssh/lifeos_deploy \
-            -o BatchMode=yes \
-            -o StrictHostKeyChecking=accept-new \
-            "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            'bash -s' << 'REMOTE_SCRIPT'
-          set -euo pipefail
-          cd "${LIFEOS_BACKEND_ROOT:-/home/zarbie/lifeos-backend}"
+          cd "${LIFEOS_BACKEND_ROOT}"
           git fetch origin main
           git reset --hard origin/main
           chmod +x scripts/deploy.sh
           exec bash scripts/deploy.sh
-          REMOTE_SCRIPT

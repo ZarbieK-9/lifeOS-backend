@@ -1,6 +1,6 @@
 # lifeOS-backend
 
-Python gRPC API + PostgreSQL. Deploy: `.github/workflows/deploy.yml` (SSH + `scripts/deploy.sh`).
+Python gRPC API + PostgreSQL. Deploy: `.github/workflows/deploy.yml` (self-hosted runner + `scripts/deploy.sh`).
 
 ```bash
 python -m venv .venv
