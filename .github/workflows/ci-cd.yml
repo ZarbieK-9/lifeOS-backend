@@ -1,5 +1,6 @@
 # GitHub-hosted: test on PR + push; deploy over SSH only on push to main.
 # Repo secrets: DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY (private key for SSH user).
+# Optional: DEPLOY_SSH_PORT (default 22) if you forward a non-standard external port to sshd.
 # Deploy runs on server at /home/zarbie/lifeos-backend (fixed path in the SSH command).
 # SSH uses -4 (IPv4 only): GitHub runners often get "Network is unreachable" when the hostname
 # has AAAA (IPv6) but IPv6 is not reachable from the internet to your home server.
@@ -42,17 +43,21 @@ jobs:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
         run: |
           set -euo pipefail
           test -n "${DEPLOY_HOST:-}" && test -n "${DEPLOY_USER:-}" && test -n "${DEPLOY_SSH_KEY:-}" || {
             echo "Add repository secrets: DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY"
             exit 1
           }
+          SSH_PORT="${DEPLOY_SSH_PORT:-22}"
           mkdir -p ~/.ssh
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/lifeos_deploy
           chmod 600 ~/.ssh/lifeos_deploy
           ssh -4 -i ~/.ssh/lifeos_deploy \
+            -p "${SSH_PORT}" \
             -o BatchMode=yes \
             -o StrictHostKeyChecking=accept-new \
+            -o ConnectTimeout=30 \
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "set -euo pipefail; cd /home/zarbie/lifeos-backend && git fetch origin main && git reset --hard origin/main && chmod +x scripts/deploy.sh && exec bash scripts/deploy.sh"
