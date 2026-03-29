@@ -1,0 +1,2 @@
+# Force LF for shell scripts on Windows checkouts (avoids bash errors on Linux servers)
+*.sh text eol=lf
