@@ -1,6 +1,8 @@
 # GitHub-hosted: test on PR + push; deploy over SSH only on push to main.
 # Repo secrets: DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY (private key for SSH user).
 # Deploy runs on server at /home/zarbie/lifeos-backend (fixed path in the SSH command).
+# SSH uses -4 (IPv4 only): GitHub runners often get "Network is unreachable" when the hostname
+# has AAAA (IPv6) but IPv6 is not reachable from the internet to your home server.
 
 name: CI/CD
 
@@ -49,7 +51,7 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/lifeos_deploy
           chmod 600 ~/.ssh/lifeos_deploy
-          ssh -i ~/.ssh/lifeos_deploy \
+          ssh -4 -i ~/.ssh/lifeos_deploy \
             -o BatchMode=yes \
             -o StrictHostKeyChecking=accept-new \
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
