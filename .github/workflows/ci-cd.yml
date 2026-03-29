@@ -1,6 +1,6 @@
 # GitHub-hosted: test on PR + push; deploy over SSH only on push to main.
 # Repo secrets: DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY (private key for SSH user).
-# Server: git clone at /home/zarbie/lifeos-backend (override with DEPLOY_REMOTE_PATH below).
+# Deploy runs on server at /home/zarbie/lifeos-backend (fixed path in the SSH command).
 
 name: CI/CD
 
@@ -40,7 +40,6 @@ jobs:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          DEPLOY_REMOTE_PATH: ${{ secrets.DEPLOY_REMOTE_PATH }}
         run: |
           set -euo pipefail
           test -n "${DEPLOY_HOST:-}" && test -n "${DEPLOY_USER:-}" && test -n "${DEPLOY_SSH_KEY:-}" || {
@@ -50,9 +49,8 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/lifeos_deploy
           chmod 600 ~/.ssh/lifeos_deploy
-          REMOTE_PATH="${DEPLOY_REMOTE_PATH:-/home/zarbie/lifeos-backend}"
           ssh -i ~/.ssh/lifeos_deploy \
             -o BatchMode=yes \
             -o StrictHostKeyChecking=accept-new \
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "set -euo pipefail; cd '${REMOTE_PATH}' && git fetch origin main && git reset --hard origin/main && chmod +x scripts/deploy.sh && exec bash scripts/deploy.sh"
+            "set -euo pipefail; cd /home/zarbie/lifeos-backend && git fetch origin main && git reset --hard origin/main && chmod +x scripts/deploy.sh && exec bash scripts/deploy.sh"

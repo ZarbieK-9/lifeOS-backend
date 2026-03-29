@@ -1,6 +1,6 @@
 # lifeOS-backend
 
-Python gRPC API + PostgreSQL. CI/CD: `.github/workflows/ci-cd.yml` — `pytest` on GitHub-hosted runners; on **push to `main`**, SSH to your server and run `scripts/deploy.sh`. Set repo secrets `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY` (optional `DEPLOY_REMOTE_PATH`, default `/home/zarbie/lifeos-backend`).
+Python gRPC API + PostgreSQL. CI/CD: `.github/workflows/ci-cd.yml` — `pytest` on GitHub-hosted runners; on **push to `main`**, SSH to your server, `cd /home/zarbie/lifeos-backend`, and run `scripts/deploy.sh`. Set repo secrets `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`.
 
 ```bash
 python -m venv .venv
