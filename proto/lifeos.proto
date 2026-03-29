@@ -552,6 +552,10 @@ message HealthResponse {
   string status = 1;
   string db = 2;
   string mqtt = 3;
+  // From build-info.json after CI/CD deploy (GitHub Actions run_number / run_id).
+  string ci_run_number = 4;
+  string ci_run_id = 5;
+  string ci_run_url = 6;
 }
 
 service HealthService {
