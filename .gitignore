@@ -1,3 +1,7 @@
+# GitHub Actions deploy key material (never commit)
+.github_actions_deploy
+.github_actions_deploy.pub
+
 .env
 .env*.local
 *.pem
