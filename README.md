@@ -1,6 +1,6 @@
 # lifeOS-backend
 
-Python gRPC API + PostgreSQL. CI/CD: `.github/workflows/ci-cd.yml` — `pytest` on GitHub-hosted runners; on **push to `main`**, SSH to your server, `cd /home/zarbie/lifeos-backend`, and run `scripts/deploy.sh`. Set repo secrets `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`. Optional `DEPLOY_SSH_PORT` if SSH is not on 22. Use **public IPv4** DNS or IP for `DEPLOY_HOST`; workflow uses **`ssh -4`**. Deploy needs **inbound TCP** to your router → server (forward to `sshd`); timeout usually means no forward, firewall, wrong IP, or **CGNAT** (no public IPv4—use a tunnel or self-hosted runner).
+Python gRPC API + PostgreSQL. CI/CD: `.github/workflows/ci-cd.yml` — **`pytest`** on `ubuntu-latest`; on **push to `main`**, **`deploy`** runs on a **self-hosted** runner on your server (like pocketbridge): `cd /home/zarbie/lifeos-backend`, `git reset --hard origin/main`, `scripts/deploy.sh` (PM2 via systemd). One-time: `scripts/register-self-hosted-runner.sh` + `svc.sh` (see script header). No SSH secrets required.
 
 ```bash
 python -m venv .venv
