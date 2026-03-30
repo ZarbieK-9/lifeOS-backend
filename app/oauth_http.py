@@ -72,7 +72,12 @@ async def _oauth_exchange(request: web.Request) -> web.StreamResponse:
         os.getenv("GOOGLE_OAUTH_CLIENT_SECRET") or os.getenv("GOOGLE_CLIENT_SECRET") or ""
     ).strip()
     if not client_id or not client_secret:
-        logger.error("Google OAuth: GOOGLE_OAUTH_CLIENT_ID / GOOGLE_OAUTH_CLIENT_SECRET not set")
+        missing = []
+        if not client_id:
+            missing.append("GOOGLE_OAUTH_CLIENT_ID")
+        if not client_secret:
+            missing.append("GOOGLE_OAUTH_CLIENT_SECRET")
+        logger.error("Google OAuth missing env: %s", ", ".join(missing))
         return web.json_response(
             {"error": "server_error", "error_description": "OAuth is not configured on the server"},
             status=503,

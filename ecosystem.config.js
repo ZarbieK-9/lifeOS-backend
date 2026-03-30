@@ -58,6 +58,9 @@ module.exports = {
         REFRESH_TOKEN_EXPIRE_DAYS: String(
           dotenv.REFRESH_TOKEN_EXPIRE_DAYS || "30",
         ),
+        // Must be explicit: PM2 saved dumps may omit keys only from `...dotenv` spread
+        GOOGLE_OAUTH_CLIENT_ID: dotenv.GOOGLE_OAUTH_CLIENT_ID || "",
+        GOOGLE_OAUTH_CLIENT_SECRET: dotenv.GOOGLE_OAUTH_CLIENT_SECRET || "",
       },
       max_restarts: 10,
       restart_delay: 3000,
