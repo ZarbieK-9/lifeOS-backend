@@ -9,6 +9,7 @@ from grpc import aio
 
 from app.auth import decode_token
 from app.db import init_db
+from app.oauth_http import start_oauth_http, stop_oauth_http
 
 from gen import lifeos_pb2_grpc
 
@@ -127,6 +128,8 @@ async def serve():
     logger.info("Initializing database...")
     await init_db()
 
+    oauth_runner = await start_oauth_http()
+
     server = aio.server()
 
     # Register all services (wrapped with auth context injection)
@@ -216,18 +219,21 @@ async def serve():
             # Windows doesn't support add_signal_handler
             pass
 
-    await stop_event.wait()
-    logger.info("Shutting down server...")
-    cron_task.cancel()
-    coach_task.cancel()
-    for t in (cron_task, coach_task):
-        try:
-            await t
-        except asyncio.CancelledError:
-            pass
-        except Exception:
-            pass
-    await server.stop(grace=5)
+    try:
+        await stop_event.wait()
+    finally:
+        logger.info("Shutting down server...")
+        cron_task.cancel()
+        coach_task.cancel()
+        for t in (cron_task, coach_task):
+            try:
+                await t
+            except asyncio.CancelledError:
+                pass
+            except Exception:
+                pass
+        await server.stop(grace=5)
+        await stop_oauth_http(oauth_runner)
 
 
 def main():

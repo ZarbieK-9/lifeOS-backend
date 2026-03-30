@@ -29,6 +29,11 @@ static_resources:
                       domains: ["*"]
                       routes:
                         - match:
+                            prefix: "/oauth/"
+                          route:
+                            cluster: oauth_http
+                            timeout: 60s
+                        - match:
                             prefix: "/v1/"
                           route:
                             cluster: grpc_backend
@@ -78,6 +83,19 @@ static_resources:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
 
   clusters:
+    - name: oauth_http
+      type: STRICT_DNS
+      connect_timeout: 5s
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: oauth_http
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: 127.0.0.1
+                      port_value: 8090
     - name: grpc_backend
       type: STRICT_DNS
       lb_policy: ROUND_ROBIN
